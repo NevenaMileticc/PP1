@@ -1,0 +1,495 @@
+package rs.ac.bg.etf.pp1;
+
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+
+// import java.io.*;
+import rs.ac.bg.etf.pp1.ast.*;
+
+
+parser code {:
+	
+	boolean errorDetected = false;
+	
+	Logger log = Logger.getLogger(getClass());
+   
+   
+    // slede redefinisani metodi za prijavu gresaka radi izmene teksta poruke
+     
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+      done_parsing();
+      report_error(message, info);
+    }
+  
+    public void syntax_error(Symbol cur_token) {
+        report_error("\nSintaksna greska", cur_token);
+    }
+  
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);
+    }
+
+    public void report_error(String message, Object info) {
+    	errorDetected = true;
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" na liniji ").append(((Symbol)info).left);
+        log.error(msg.toString());
+    }
+    
+    public void report_info(String message, Object info) {
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" na liniji ").append(((Symbol)info).left);
+        log.info(msg.toString());
+    }
+    
+:}
+
+/*
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if (s != null && s.value != null) 
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+*/
+
+/*terminali*/
+
+
+terminal PROG; /*"program"*/
+terminal BREAK; /*"break"*/
+terminal ELSE; /*"else"*/
+terminal CONST; /*"else"*/
+terminal IF; /*"if"*/
+terminal NEW; /*"new"*/
+terminal PRINT; /*"print"*/
+terminal READ; /*"read"*/
+terminal RETURN; /*"return"*/
+terminal VOID; /*"void"*/
+terminal CONTINUE; /*"continue"*/
+terminal SET; /*"set"*/
+terminal UNION; /*"union"*/
+terminal DO; /*"do"*/
+terminal WHILE; /*"while"*/
+terminal MAP; /*"map"*/
+
+terminal Character CHAR_CONST; /* obican karakter npr. 'a' */
+terminal Boolean BOOL_CONST; /* true/false */
+terminal Integer NUMBER; /* obican broj npr. 0, 1, 2, ... */
+terminal String IDENT; /* obican string npr. "zvezda" */
+
+
+terminal PLUS; /* '+' */
+terminal MINUS; /* '-' */
+terminal PUTA; /* '*' */
+terminal PODELJENO; /* '/' */
+terminal MODUO; /* '%' */
+terminal JEDNAKO; /* '=' */
+terminal JEDNAKO_JEDNAKO; /* '==' */
+terminal RAZLICITO; /* '!=' */
+terminal VECE; /* '>' */
+terminal VECE_JEDNAKO; /* '>=' */
+terminal MANJE; /* '<' */
+terminal MANJE_JEDNAKO; /* '<=' */
+terminal AND; /* '&&' */
+terminal ILI; /* '||' */
+terminal PLUS_PLUS; /* '++' */
+terminal MINUS_MINUS; /* '--' */
+terminal TACKA_ZAREZ; /* ';' */
+terminal DVE_TACKE; /* ':' */
+terminal ZAREZ; /* ',' */
+terminal TACKA; /* '.' */
+terminal LEVA_ZAGRADA; /* '(' */
+terminal DESNA_ZAGRADA; /* ')' */
+terminal LEVA_UGLASTA_ZAGRADA; /* '[' */
+terminal DESNA_UGLASTA_ZAGRADA; /* ']' */
+terminal LEVA_VITICASTA_ZAGRADA; /* '{' */
+terminal DESNA_VITICASTA_ZAGRADA; /* '}' */
+
+/* neterminali */
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Program;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgIme;
+nonterminal KonstanteVarijableLista KonstanteVarijableLista;
+nonterminal MetodeLista MetodeLista;
+nonterminal VarDecl VarDecl;
+nonterminal ConstDecl ConstDecl;
+nonterminal TipKonstante TipKonstante;
+nonterminal VrednostKonstante VrednostKonstante;
+nonterminal ListaKonstanti ListaKonstanti;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
+nonterminal TipVarijable TipVarijable;
+nonterminal ListaVarijabli ListaVarijabli;
+nonterminal Varijabla Varijabla;
+nonterminal PoslednjaVarijabla PoslednjaVarijabla;
+nonterminal UglasteZagrade UglasteZagrade;
+nonterminal SetDecl SetDecl;
+nonterminal ListaSkupova ListaSkupova;
+nonterminal Skup Skup;
+nonterminal PoslednjiSkup PoslednjiSkup;
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj MethodDecl;
+nonterminal ListaPromenljivihMetode ListaPromenljivihMetode;
+nonterminal StatementList StatementList;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj MethodSignature;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct TipMetode;
+nonterminal FormParamsList FormParamsList;
+nonterminal FormParam FormParam;
+nonterminal FormParamDecl FormParamDecl;
+
+
+nonterminal Statement Statement;
+nonterminal SingleStatement SingleStatement;
+nonterminal IfUslov IfUslov;
+nonterminal PocetakIfBloka PocetakIfBloka;
+nonterminal PocetakDoWhileBloka PocetakDoWhileBloka;
+nonterminal WhileUslov WhileUslov;
+nonterminal BocniEfekat BocniEfekat;
+nonterminal DesignatorStatement DesignatorStatement;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Designator;
+nonterminal PocetakIfUslova PocetakIfUslova;
+nonterminal KrajIfUslova KrajIfUslova;
+nonterminal PocetakDoWhileUslova PocetakDoWhileUslova;
+nonterminal KrajDoWhileUslova KrajDoWhileUslova;
+nonterminal Condition Condition;
+
+
+nonterminal CondTerm CondTerm;
+nonterminal KrajIliNaredbe KrajIliNaredbe;
+nonterminal CondFact CondFact;
+nonterminal Relop Relop;
+
+
+nonterminal ActPars ActPars;
+nonterminal Setop Setop;
+
+
+nonterminal rs.etf.pp1.symboltable.concepts.Struct AddopList;
+nonterminal Addop Addop;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Term;
+nonterminal Mulop Mulop;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Factor;
+
+nonterminal ImeNizaDesignator ImeNizaDesignator;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct FactorList;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ImePozivaneMetode;
+nonterminal ActParsList ActParsList;
+
+nonterminal PocetakElseBloka PocetakElseBloka;
+
+precedence left ELSE;
+
+/* gramatika */
+
+Program ::= (Program) PROG ProgIme:P1 KonstanteVarijableLista:K2 LEVA_VITICASTA_ZAGRADA MetodeLista:M3 DESNA_VITICASTA_ZAGRADA {: RESULT=new Program(P1, K2, M3); RESULT.setLine(P1left); :};
+
+ProgIme ::= (ProgIme) IDENT:I1 {: RESULT=new ProgIme(I1); RESULT.setLine(I1left); :};
+
+KonstanteVarijableLista ::= (KonstanteVarijableLista_varijabla) KonstanteVarijableLista:K1 VarDecl:V2 {: RESULT=new KonstanteVarijableLista_varijabla(K1, V2); RESULT.setLine(K1left); :}
+							|
+							(KonstanteVarijableLista_konstanta) KonstanteVarijableLista:K1 ConstDecl:C2 {: RESULT=new KonstanteVarijableLista_konstanta(K1, C2); RESULT.setLine(K1left); :} 
+							|
+							(KonstanteVarijableLista_skup) KonstanteVarijableLista:K1 SetDecl:S2 {: RESULT=new KonstanteVarijableLista_skup(K1, S2); RESULT.setLine(K1left); :}
+							|
+							(KonstanteVarijableLista_epsilon) {: RESULT=new KonstanteVarijableLista_epsilon(); :} /* epsilon */
+							;
+/* konstante */
+
+ConstDecl ::= (ConstDecl) CONST TipKonstante:T1 VrednostKonstante:V2 ListaKonstanti:L3 TACKA_ZAREZ {: RESULT=new ConstDecl(T1, V2, L3); RESULT.setLine(T1left); :}; 
+
+TipKonstante ::= (TipKonstante) Type:T1 {: RESULT=new TipKonstante(T1); RESULT.setLine(T1left); :};
+
+VrednostKonstante ::= (VrednostKonstante_bool) IDENT:I1 JEDNAKO BOOL_CONST:B2 {: RESULT=new VrednostKonstante_bool(I1, B2); RESULT.setLine(I1left); :}
+                      |
+                      (VrednostKonstante_char) IDENT:I1 JEDNAKO CHAR_CONST:C2 {: RESULT=new VrednostKonstante_char(I1, C2); RESULT.setLine(I1left); :}
+                      |
+                      (VrednostKonstante_int) IDENT:I1 JEDNAKO NUMBER:N2 {: RESULT=new VrednostKonstante_int(I1, N2); RESULT.setLine(I1left); :}
+                      ;
+
+ListaKonstanti ::= (ListaViseKonstanti) ListaKonstanti:L1 ZAREZ VrednostKonstante:V2 {: RESULT=new ListaViseKonstanti(L1, V2); RESULT.setLine(L1left); :}
+				   |
+				   (ListaKonstanti_epsilon) {: RESULT=new ListaKonstanti_epsilon(); :} /* epsilon */
+				   ;
+
+/* tipovi */
+
+Type ::= (Type) IDENT:I1 {: RESULT=new Type(I1); RESULT.setLine(I1left); :};
+
+/* varijable */
+
+VarDecl ::= (VarDecl_ok) TipVarijable:T1 ListaVarijabli:L2 {: RESULT=new VarDecl_ok(T1, L2); RESULT.setLine(T1left); :}
+			|
+            (VarDecl_error) error:e {: parser.report_error("Izvrsen oporavak do ; u liniji " + eleft, null); :} TACKA_ZAREZ {: RESULT=new VarDecl_error(); :}
+            ;
+
+TipVarijable ::= (TipVarijable) Type:T1 {: RESULT=new TipVarijable(T1); RESULT.setLine(T1left); :};
+
+ListaVarijabli ::= (ListaVarijabli_neposlednja) Varijabla:V1 ListaVarijabli:L2 {: RESULT=new ListaVarijabli_neposlednja(V1, L2); RESULT.setLine(V1left); :}
+                   | 
+                   (ListaVarijabli_poslednja) PoslednjaVarijabla:P1 {: RESULT=new ListaVarijabli_poslednja(P1); RESULT.setLine(P1left); :}
+                   ;
+
+Varijabla ::= (Varijabla_ok) IDENT:I1 UglasteZagrade:U2 ZAREZ {: RESULT=new Varijabla_ok(I1, U2); RESULT.setLine(I1left); :} 
+              |
+              (Varijabla_error) error:n {: parser.report_error("Izvrsen oporavak do , u liniji " + nleft, null); :} ZAREZ {: RESULT=new Varijabla_error(); :}
+              ;
+              
+UglasteZagrade ::= (VarijablaJeNiz) LEVA_UGLASTA_ZAGRADA DESNA_UGLASTA_ZAGRADA {: RESULT=new VarijablaJeNiz(); :}
+                    |
+                    (VarijablaNijeNiz) {: RESULT=new VarijablaNijeNiz(); :} /* epsilon */
+                    ;
+
+PoslednjaVarijabla ::= (PoslednjaVarijabla_ok) IDENT:I1 UglasteZagrade:U2 TACKA_ZAREZ {: RESULT=new PoslednjaVarijabla_ok(I1, U2); RESULT.setLine(I1left); :} 
+                       |
+                       (PoslednjaVarijabla_error) error:m {: parser.report_error("Izvrsen oporavak do ; u liniji " + mleft, null); :} TACKA_ZAREZ {: RESULT=new PoslednjaVarijabla_error(); :}
+                       ;
+
+/* skupovi */
+
+SetDecl ::= (SetDecl) SET ListaSkupova:L1 {: RESULT=new SetDecl(L1); RESULT.setLine(L1left); :};
+
+ListaSkupova ::= (ListaSkupova_neposlednji) Skup:S1 ListaSkupova:L2 {: RESULT=new ListaSkupova_neposlednji(S1, L2); RESULT.setLine(S1left); :}
+				 | 
+				 (ListaSkupova_poslednji) PoslednjiSkup:P1 {: RESULT=new ListaSkupova_poslednji(P1); RESULT.setLine(P1left); :}
+				 ; 
+
+Skup ::= (Skup_ok) IDENT:I1 ZAREZ {: RESULT=new Skup_ok(I1); RESULT.setLine(I1left); :}
+		 | 
+		 (Skup_error) error ZAREZ {: RESULT=new Skup_error(); :}
+		 ;
+
+PoslednjiSkup ::= (PoslednjiSkup_ok) IDENT:I1 TACKA_ZAREZ {: RESULT=new PoslednjiSkup_ok(I1); RESULT.setLine(I1left); :}
+				  |
+				  (PoslednjiSkup_error) error TACKA_ZAREZ {: RESULT=new PoslednjiSkup_error(); :}
+				  ;
+
+/* metode */
+
+
+MetodeLista ::= (MetodeLista_imaMetoda) MetodeLista:M1 MethodDecl:M2 {: RESULT=new MetodeLista_imaMetoda(M1, M2); RESULT.setLine(M1left); :}
+				|
+				(MetodeLista_nemaMetoda) {: RESULT=new MetodeLista_nemaMetoda(); :} /* epsilon */
+				;
+
+MethodDecl ::= (MethodDecl) MethodSignature:M1 LEVA_ZAGRADA FormParam:F2 DESNA_ZAGRADA ListaPromenljivihMetode:L3 LEVA_VITICASTA_ZAGRADA StatementList:S4 DESNA_VITICASTA_ZAGRADA {: RESULT=new MethodDecl(M1, F2, L3, S4); RESULT.setLine(M1left); :}; 
+				
+ListaPromenljivihMetode ::= (ListaPromenljivihMetode_varijabla) ListaPromenljivihMetode:L1 VarDecl:V2 {: RESULT=new ListaPromenljivihMetode_varijabla(L1, V2); RESULT.setLine(L1left); :}
+							|
+							(ListaPromenljivihMetode_skup) ListaPromenljivihMetode:L1 SetDecl:S2 {: RESULT=new ListaPromenljivihMetode_skup(L1, S2); RESULT.setLine(L1left); :}
+							|
+							(ListaPromenljivihMetode_prazna) {: RESULT=new ListaPromenljivihMetode_prazna(); :} /* epsilon */
+							;
+				
+
+MethodSignature ::= (MethodSignature) TipMetode:T1 IDENT:I2 {: RESULT=new MethodSignature(T1, I2); RESULT.setLine(T1left); :};
+			
+TipMetode ::= (TipMetode_pravi) Type:T1 {: RESULT=new TipMetode_pravi(T1); RESULT.setLine(T1left); :}
+		      |
+		      (TipMetode_void) VOID {: RESULT=new TipMetode_void(); :}
+		      ;
+
+FormParam ::= (FormParam_imaParametre) FormParamsList:F1 {: RESULT=new FormParam_imaParametre(F1); RESULT.setLine(F1left); :} 
+			  |
+			  (FormParam_nemaParametre) {: RESULT=new FormParam_nemaParametre(); :} /* epsilon */
+			  ;
+
+FormParamsList ::= (FormParamsList_viseParametara) FormParamDecl:F1 ZAREZ FormParamsList:F2 {: RESULT=new FormParamsList_viseParametara(F1, F2); RESULT.setLine(F1left); :}
+				   |
+				   (FormParamsList_jedanParametar) FormParamDecl:F1 {: RESULT=new FormParamsList_jedanParametar(F1); RESULT.setLine(F1left); :}
+				   |
+				   (FormParamsList_greska) error ZAREZ FormParamsList:F1 {: RESULT=new FormParamsList_greska(F1); RESULT.setLine(F1left); :}
+				   ;
+				 
+FormParamDecl ::= (FormParamDecl_nijeSet) Type:T1 IDENT:I2 UglasteZagrade:U3 {: RESULT=new FormParamDecl_nijeSet(T1, I2, U3); RESULT.setLine(T1left); :}
+				  |
+				  (FormParamDecl_Set) SET IDENT:I1 {: RESULT=new FormParamDecl_Set(I1); RESULT.setLine(I1left); :}
+				  ;
+
+
+
+/* statements */
+
+
+PocetakIfBloka       ::= (PocetakIfBloka) {: RESULT=new PocetakIfBloka(); :} 		/* epsilon */ ;
+PocetakDoWhileBloka  ::= (PocetakDoWhileBloka) {: RESULT=new PocetakDoWhileBloka(); :} 	/* epsilon */ ;
+PocetakIfUslova      ::= (PocetakIfUslova) {: RESULT=new PocetakIfUslova(); :} 		/* epsilon */ ;
+KrajIfUslova         ::= (KrajIfUslova) {: RESULT=new KrajIfUslova(); :} 		/* epsilon */ ;
+PocetakDoWhileUslova ::= (PocetakDoWhileUslova) {: RESULT=new PocetakDoWhileUslova(); :} /* epsilon */ ;
+KrajDoWhileUslova    ::= (KrajDoWhileUslova) {: RESULT=new KrajDoWhileUslova(); :}	/* epsilon */ ;
+PocetakElseBloka     ::= (PocetakElseBloka) {: RESULT=new PocetakElseBloka(); :}     /* epsilon*/  ;
+
+StatementList ::= (StatementList_neprazna) StatementList:S1 Statement:S2 {: RESULT=new StatementList_neprazna(S1, S2); RESULT.setLine(S1left); :}
+				  |
+				  (StatementList_prazna) {: RESULT=new StatementList_prazna(); :} /* epsilon*/
+				  ;	
+				  
+Statement ::= (Statement_single) SingleStatement:S1 {: RESULT=new Statement_single(S1); RESULT.setLine(S1left); :}
+              |
+              (Statement_block) LEVA_VITICASTA_ZAGRADA StatementList:S1 DESNA_VITICASTA_ZAGRADA {: RESULT=new Statement_block(S1); RESULT.setLine(S1left); :}
+              ;	
+
+SingleStatement ::= (Statement_designator) DesignatorStatement:D1 TACKA_ZAREZ {: RESULT=new Statement_designator(D1); RESULT.setLine(D1left); :}
+				    |
+				    (Statement_if) IfUslov:I1 PocetakIfBloka:P2 Statement:S3 PocetakElseBloka:P4 {: RESULT=new Statement_if(I1, P2, S3, P4); RESULT.setLine(I1left); :}
+				    |
+				    (Statement_ifElse) IfUslov:I1 PocetakIfBloka:P2 Statement:S3 PocetakElseBloka:P4 ELSE Statement:S5 {: RESULT=new Statement_ifElse(I1, P2, S3, P4, S5); RESULT.setLine(I1left); :}
+				    |
+				    (Statement_doWhile) DO PocetakDoWhileBloka:P1 Statement:S2 WhileUslov:W3 {: RESULT=new Statement_doWhile(P1, S2, W3); RESULT.setLine(P1left); :}
+				    |
+				    (Statement_break) BREAK TACKA_ZAREZ {: RESULT=new Statement_break(); :}
+				    |
+				    (Statement_continue) CONTINUE TACKA_ZAREZ {: RESULT=new Statement_continue(); :}
+				    |
+				    (Statement_return) RETURN TACKA_ZAREZ {: RESULT=new Statement_return(); :}
+				    |
+				    (Statement_returnExpr) RETURN Expr:E1 TACKA_ZAREZ {: RESULT=new Statement_returnExpr(E1); RESULT.setLine(E1left); :}
+				    |
+				    (Statement_print) PRINT LEVA_ZAGRADA Expr:E1 DESNA_ZAGRADA TACKA_ZAREZ {: RESULT=new Statement_print(E1); RESULT.setLine(E1left); :}
+				    |
+				    (Statement_printNumber) PRINT LEVA_ZAGRADA Expr:E1 ZAREZ NUMBER:N2 DESNA_ZAGRADA TACKA_ZAREZ {: RESULT=new Statement_printNumber(E1, N2); RESULT.setLine(E1left); :}
+				    |
+				    (Statement_read) READ LEVA_ZAGRADA Designator:D1 DESNA_ZAGRADA TACKA_ZAREZ {: RESULT=new Statement_read(D1); RESULT.setLine(D1left); :}
+				    ;
+
+WhileUslov ::= (WhileUslov_saCondition) WHILE LEVA_ZAGRADA PocetakDoWhileUslova:P1 Condition:C2 KrajDoWhileUslova:K3 BocniEfekat:B4 DESNA_ZAGRADA TACKA_ZAREZ {: RESULT=new WhileUslov_saCondition(P1, C2, K3, B4); RESULT.setLine(P1left); :}
+			   |
+			   (WhileUslov_bezCondition) WHILE LEVA_ZAGRADA DESNA_ZAGRADA TACKA_ZAREZ {: RESULT=new WhileUslov_bezCondition(); :};				
+	
+	
+BocniEfekat ::= (SaBocnimEfektom) ZAREZ DesignatorStatement:D1 {: RESULT=new SaBocnimEfektom(D1); RESULT.setLine(D1left); :}
+				|
+				(BezBocnogEfekta) {: RESULT=new BezBocnogEfekta(); :} /* epsilon */
+				;	
+
+
+
+IfUslov ::= (IfUslov_ok) IF PocetakIfUslova:P1 LEVA_ZAGRADA Condition:C2 DESNA_ZAGRADA KrajIfUslova:K3 {: RESULT=new IfUslov_ok(P1, C2, K3); RESULT.setLine(P1left); :}	
+			|
+			(IfUslov_error) IF PocetakIfUslova:P1 LEVA_ZAGRADA error:l {: parser.report_error("Izvrsen oporavak do ) u liniji " + lleft, null); :} DESNA_ZAGRADA KrajIfUslova:K2 {: RESULT=new IfUslov_error(P1, K2); RESULT.setLine(P1left); :}
+			;	
+
+
+/* uslovi */
+
+Condition ::= (Condition_listaOrUslova) Condition:C1 KrajIliNaredbe:K2 ILI CondTerm:C3 {: RESULT=new Condition_listaOrUslova(C1, K2, C3); RESULT.setLine(C1left); :}
+			  |
+			  (Condition_jedanUslov) CondTerm:C1 {: RESULT=new Condition_jedanUslov(C1); RESULT.setLine(C1left); :}
+			  ;
+
+KrajIliNaredbe ::= (KrajIliNaredbe) {: RESULT=new KrajIliNaredbe(); :} /* epsilon */;
+
+CondTerm ::= (CondTerm_listaAndUslova) CondTerm:C1 AND CondFact:C2 {: RESULT=new CondTerm_listaAndUslova(C1, C2); RESULT.setLine(C1left); :}
+			 |
+			 (CondTerm_jedanUslov) CondFact:C1 {: RESULT=new CondTerm_jedanUslov(C1); RESULT.setLine(C1left); :}
+			 ;
+
+CondFact ::= (CondFact_listaIzraza) Expr:E1 Relop:R2 Expr:E3 {: RESULT=new CondFact_listaIzraza(E1, R2, E3); RESULT.setLine(E1left); :}
+			 |
+			 (CondFact_jedanIzraz) Expr:E1 {: RESULT=new CondFact_jedanIzraz(E1); RESULT.setLine(E1left); :}
+			 ;
+
+
+/* Designators */
+
+DesignatorStatement ::= (DesignatorStatement_expr) Designator:D1 JEDNAKO Expr:E2 {: RESULT=new DesignatorStatement_expr(D1, E2); RESULT.setLine(D1left); :} 
+						|
+						(DesignatorStatement_pozivMetode) ImePozivaneMetode:I1 LEVA_ZAGRADA ActParsList:A2 DESNA_ZAGRADA {: RESULT=new DesignatorStatement_pozivMetode(I1, A2); RESULT.setLine(I1left); :}
+						|
+						(DesignatorStatement_inkrement) Designator:D1 PLUS_PLUS {: RESULT=new DesignatorStatement_inkrement(D1); RESULT.setLine(D1left); :}
+						|
+						(DesignatorStatement_dekrement) Designator:D1 MINUS_MINUS {: RESULT=new DesignatorStatement_dekrement(D1); RESULT.setLine(D1left); :}
+						|
+						(DesignatorStatement_operacijaSaSkupovima) Designator:D1 JEDNAKO Designator:D2 Setop:S3 Designator:D4 {: RESULT=new DesignatorStatement_operacijaSaSkupovima(D1, D2, S3, D4); RESULT.setLine(D1left); :}
+						;
+
+ImePozivaneMetode ::= (ImePozivaneMetode) Designator:D1 {: RESULT=new ImePozivaneMetode(D1); RESULT.setLine(D1left); :};
+
+ActPars ::= (ActPars_listaIzraza) ActPars:A1 ZAREZ Expr:E2 {: RESULT=new ActPars_listaIzraza(A1, E2); RESULT.setLine(A1left); :}
+			|
+			(ActPars_jedanIzraz) Expr:E1 {: RESULT=new ActPars_jedanIzraz(E1); RESULT.setLine(E1left); :}
+			;
+			
+ActParsList ::= (ActParsList_neprazna) ActPars:A1 {: RESULT=new ActParsList_neprazna(A1); RESULT.setLine(A1left); :}
+				|
+				(ActParsList_prazna) {: RESULT=new ActParsList_prazna(); :} /* epsilon */
+				;
+
+Designator ::= (Designator_niz) ImeNizaDesignator:I1 LEVA_UGLASTA_ZAGRADA Expr:E2 DESNA_UGLASTA_ZAGRADA {: RESULT=new Designator_niz(I1, E2); RESULT.setLine(I1left); :}
+			   |
+			   (Designator_ident) IDENT:I1 {: RESULT=new Designator_ident(I1); RESULT.setLine(I1left); :}
+			   ;
+
+ImeNizaDesignator ::= (ImeNizaDesignator) Designator:D1 {: RESULT=new ImeNizaDesignator(D1); RESULT.setLine(D1left); :};
+
+/* Expressions */
+
+
+Expr ::= (Expr_lista) AddopList:A1 {: RESULT=new Expr_lista(A1); RESULT.setLine(A1left); :}
+		 |
+		 (Expr_map) Designator:D1 MAP Designator:D2 {: RESULT=new Expr_map(D1, D2); RESULT.setLine(D1left); :}
+		 ;
+
+AddopList ::= (AddopList_listaTermova) AddopList:A1 Addop:A2 Term:T3 {: RESULT=new AddopList_listaTermova(A1, A2, T3); RESULT.setLine(A1left); :}
+			  |
+			  (AddopList_jedanTerm) Term:T1 {: RESULT=new AddopList_jedanTerm(T1); RESULT.setLine(T1left); :}
+			  |
+			  (AddopList_minus) MINUS Term:T1 {: RESULT=new AddopList_minus(T1); RESULT.setLine(T1left); :}
+			  ;
+
+Term ::= (Term) FactorList:F1 {: RESULT=new Term(F1); RESULT.setLine(F1left); :};
+
+FactorList ::= (FactorList_listaFaktora) FactorList:F1 Mulop:M2 Factor:F3 {: RESULT=new FactorList_listaFaktora(F1, M2, F3); RESULT.setLine(F1left); :}
+		 	   |
+		 	   (FactorList_jedanFaktor) Factor:F1 {: RESULT=new FactorList_jedanFaktor(F1); RESULT.setLine(F1left); :}
+		 	   ; 
+
+Factor ::= (Factor_pozivMetode) ImePozivaneMetode:I1 LEVA_ZAGRADA ActParsList:A2 DESNA_ZAGRADA {: RESULT=new Factor_pozivMetode(I1, A2); RESULT.setLine(I1left); :}
+		   |	
+		   (Factor_designator) Designator:D1 {: RESULT=new Factor_designator(D1); RESULT.setLine(D1left); :}
+		   |
+		   (Factor_int) NUMBER:N1 {: RESULT=new Factor_int(N1); RESULT.setLine(N1left); :}
+		   |
+		   (Factor_char) CHAR_CONST:C1 {: RESULT=new Factor_char(C1); RESULT.setLine(C1left); :}
+		   |
+		   (Factor_bool) BOOL_CONST:B1 {: RESULT=new Factor_bool(B1); RESULT.setLine(B1left); :}
+		   |
+		   (Factor_newSkup) NEW SET LEVA_UGLASTA_ZAGRADA Expr:E1 DESNA_UGLASTA_ZAGRADA {: RESULT=new Factor_newSkup(E1); RESULT.setLine(E1left); :}
+		   |
+		   (Factor_newNiz) NEW Type:T1 LEVA_UGLASTA_ZAGRADA Expr:E2 DESNA_UGLASTA_ZAGRADA {: RESULT=new Factor_newNiz(T1, E2); RESULT.setLine(T1left); :}
+		   |
+		   (Factor_expr) LEVA_ZAGRADA Expr:E1 DESNA_ZAGRADA {: RESULT=new Factor_expr(E1); RESULT.setLine(E1left); :}
+		   ;
+				
+
+/* Operacije */
+
+Relop ::= (Relop_jednakoJednako) JEDNAKO_JEDNAKO {: RESULT=new Relop_jednakoJednako(); :}
+		  |
+		  (Relop_razlicito) RAZLICITO {: RESULT=new Relop_razlicito(); :}
+		  |
+		  (Relop_manje) MANJE {: RESULT=new Relop_manje(); :}
+		  |
+		  (Relop_vece) VECE {: RESULT=new Relop_vece(); :}
+		  |
+		  (Relop_manjeJednako) MANJE_JEDNAKO {: RESULT=new Relop_manjeJednako(); :}
+		  |
+		  (Relop_veceJednako) VECE_JEDNAKO {: RESULT=new Relop_veceJednako(); :}
+		  ;
+
+Addop ::= (Addop_plus) PLUS {: RESULT=new Addop_plus(); :}
+		  |
+		  (Addop_minus) MINUS {: RESULT=new Addop_minus(); :}
+		  ;
+
+Mulop ::= (Mulop_puta) PUTA {: RESULT=new Mulop_puta(); :}
+		  |
+		  (Mulop_podeljeno) PODELJENO {: RESULT=new Mulop_podeljeno(); :}
+		  |
+		  (Mulop_moduo) MODUO {: RESULT=new Mulop_moduo(); :}
+		  ;
+
+Setop ::= (Setop) UNION {: RESULT=new Setop(); :};			
+				

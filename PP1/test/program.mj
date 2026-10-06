@@ -1,0 +1,51 @@
+//Test 302
+
+program test302
+
+int i;
+bool ibool;
+
+int niz2;
+
+int niz[];
+int a;
+
+set s1, s2, s3;
+
+{
+	int foo(int num){
+		return num * num;
+	}
+
+	void main() {
+	
+		niz = new int[3];
+		niz[0] = 5; niz[1] = 5; niz[2] = 7;
+	
+		s1 = new set[5];
+		s2 = new set[5];
+		s3 = new set[5];
+		
+		addAll(s2, niz);
+		print(s2);
+		
+		niz[0] = 5; niz[1] = 5; niz[2] = 7;
+		addAll(s3, niz);
+		print(s3);
+		
+		add(s1, 1);
+		
+		print(s1);
+		
+		s1 = s2 union s3;
+		add(s1, 3);
+		add(s1, 4);
+		
+		print(s1);
+		
+		print(foo map niz);
+	}
+	
+	
+}
+

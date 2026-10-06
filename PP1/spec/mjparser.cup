@@ -1,0 +1,495 @@
+package rs.ac.bg.etf.pp1;
+
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+
+// import java.io.*;
+import rs.ac.bg.etf.pp1.ast.*;
+
+
+parser code {:
+	
+	boolean errorDetected = false;
+	
+	Logger log = Logger.getLogger(getClass());
+   
+   
+    // slede redefinisani metodi za prijavu gresaka radi izmene teksta poruke
+     
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+      done_parsing();
+      report_error(message, info);
+    }
+  
+    public void syntax_error(Symbol cur_token) {
+        report_error("\nSintaksna greska", cur_token);
+    }
+  
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);
+    }
+
+    public void report_error(String message, Object info) {
+    	errorDetected = true;
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" na liniji ").append(((Symbol)info).left);
+        log.error(msg.toString());
+    }
+    
+    public void report_info(String message, Object info) {
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" na liniji ").append(((Symbol)info).left);
+        log.info(msg.toString());
+    }
+    
+:}
+
+/*
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if (s != null && s.value != null) 
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+*/
+
+/*terminali*/
+
+
+terminal PROG; /*"program"*/
+terminal BREAK; /*"break"*/
+terminal ELSE; /*"else"*/
+terminal CONST; /*"else"*/
+terminal IF; /*"if"*/
+terminal NEW; /*"new"*/
+terminal PRINT; /*"print"*/
+terminal READ; /*"read"*/
+terminal RETURN; /*"return"*/
+terminal VOID; /*"void"*/
+terminal CONTINUE; /*"continue"*/
+terminal SET; /*"set"*/
+terminal UNION; /*"union"*/
+terminal DO; /*"do"*/
+terminal WHILE; /*"while"*/
+terminal MAP; /*"map"*/
+
+terminal Character CHAR_CONST; /* obican karakter npr. 'a' */
+terminal Boolean BOOL_CONST; /* true/false */
+terminal Integer NUMBER; /* obican broj npr. 0, 1, 2, ... */
+terminal String IDENT; /* obican string npr. "zvezda" */
+
+
+terminal PLUS; /* '+' */
+terminal MINUS; /* '-' */
+terminal PUTA; /* '*' */
+terminal PODELJENO; /* '/' */
+terminal MODUO; /* '%' */
+terminal JEDNAKO; /* '=' */
+terminal JEDNAKO_JEDNAKO; /* '==' */
+terminal RAZLICITO; /* '!=' */
+terminal VECE; /* '>' */
+terminal VECE_JEDNAKO; /* '>=' */
+terminal MANJE; /* '<' */
+terminal MANJE_JEDNAKO; /* '<=' */
+terminal AND; /* '&&' */
+terminal ILI; /* '||' */
+terminal PLUS_PLUS; /* '++' */
+terminal MINUS_MINUS; /* '--' */
+terminal TACKA_ZAREZ; /* ';' */
+terminal DVE_TACKE; /* ':' */
+terminal ZAREZ; /* ',' */
+terminal TACKA; /* '.' */
+terminal LEVA_ZAGRADA; /* '(' */
+terminal DESNA_ZAGRADA; /* ')' */
+terminal LEVA_UGLASTA_ZAGRADA; /* '[' */
+terminal DESNA_UGLASTA_ZAGRADA; /* ']' */
+terminal LEVA_VITICASTA_ZAGRADA; /* '{' */
+terminal DESNA_VITICASTA_ZAGRADA; /* '}' */
+
+/* neterminali */
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Program;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgIme;
+nonterminal KonstanteVarijableLista;
+nonterminal MetodeLista;
+nonterminal VarDecl;
+nonterminal ConstDecl;
+nonterminal TipKonstante;
+nonterminal VrednostKonstante;
+nonterminal ListaKonstanti;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type;
+nonterminal TipVarijable;
+nonterminal ListaVarijabli;
+nonterminal Varijabla;
+nonterminal PoslednjaVarijabla;
+nonterminal UglasteZagrade;
+nonterminal SetDecl;
+nonterminal ListaSkupova;
+nonterminal Skup;
+nonterminal PoslednjiSkup;
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj MethodDecl;
+nonterminal ListaPromenljivihMetode;
+nonterminal StatementList;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj MethodSignature;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct TipMetode;
+nonterminal FormParamsList;
+nonterminal FormParam;
+nonterminal FormParamDecl;
+
+
+nonterminal Statement;
+nonterminal SingleStatement;
+nonterminal IfUslov;
+nonterminal PocetakIfBloka;
+nonterminal PocetakDoWhileBloka;
+nonterminal WhileUslov;
+nonterminal BocniEfekat;
+nonterminal DesignatorStatement;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Expr;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Designator;
+nonterminal PocetakIfUslova;
+nonterminal KrajIfUslova;
+nonterminal PocetakDoWhileUslova;
+nonterminal KrajDoWhileUslova;
+nonterminal Condition;
+
+
+nonterminal CondTerm;
+nonterminal KrajIliNaredbe;
+nonterminal CondFact;
+nonterminal Relop;
+
+
+nonterminal ActPars;
+nonterminal Setop;
+
+
+nonterminal rs.etf.pp1.symboltable.concepts.Struct AddopList;
+nonterminal Addop;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Term;
+nonterminal Mulop;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Factor;
+
+nonterminal ImeNizaDesignator;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct FactorList;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ImePozivaneMetode;
+nonterminal ActParsList;
+
+nonterminal PocetakElseBloka;
+
+precedence left ELSE;
+
+/* gramatika */
+
+Program ::= (Program) PROG ProgIme KonstanteVarijableLista LEVA_VITICASTA_ZAGRADA MetodeLista DESNA_VITICASTA_ZAGRADA;
+
+ProgIme ::= (ProgIme) IDENT;
+
+KonstanteVarijableLista ::= (KonstanteVarijableLista_varijabla) KonstanteVarijableLista VarDecl
+							|
+							(KonstanteVarijableLista_konstanta) KonstanteVarijableLista ConstDecl 
+							|
+							(KonstanteVarijableLista_skup) KonstanteVarijableLista SetDecl
+							|
+							(KonstanteVarijableLista_epsilon) /* epsilon */
+							;
+/* konstante */
+
+ConstDecl ::= (ConstDecl) CONST TipKonstante VrednostKonstante ListaKonstanti TACKA_ZAREZ; 
+
+TipKonstante ::= (TipKonstante) Type;
+
+VrednostKonstante ::= (VrednostKonstante_bool) IDENT JEDNAKO BOOL_CONST
+                      |
+                      (VrednostKonstante_char) IDENT JEDNAKO CHAR_CONST
+                      |
+                      (VrednostKonstante_int) IDENT JEDNAKO NUMBER
+                      ;
+
+ListaKonstanti ::= (ListaViseKonstanti) ListaKonstanti ZAREZ VrednostKonstante
+				   |
+				   (ListaKonstanti_epsilon) /* epsilon */
+				   ;
+
+/* tipovi */
+
+Type ::= (Type) IDENT;
+
+/* varijable */
+
+VarDecl ::= (VarDecl_ok) TipVarijable ListaVarijabli
+			|
+            (VarDecl_error) error:e {: parser.report_error("Izvrsen oporavak do ; u liniji " + eleft, null); :} TACKA_ZAREZ
+            ;
+
+TipVarijable ::= (TipVarijable) Type;
+
+ListaVarijabli ::= (ListaVarijabli_neposlednja) Varijabla ListaVarijabli
+                   | 
+                   (ListaVarijabli_poslednja) PoslednjaVarijabla
+                   ;
+
+Varijabla ::= (Varijabla_ok) IDENT UglasteZagrade ZAREZ 
+              |
+              (Varijabla_error) error:n {: parser.report_error("Izvrsen oporavak do , u liniji " + nleft, null); :} ZAREZ
+              ;
+              
+UglasteZagrade ::= (VarijablaJeNiz) LEVA_UGLASTA_ZAGRADA DESNA_UGLASTA_ZAGRADA
+                    |
+                    (VarijablaNijeNiz) /* epsilon */
+                    ;
+
+PoslednjaVarijabla ::= (PoslednjaVarijabla_ok) IDENT UglasteZagrade TACKA_ZAREZ 
+                       |
+                       (PoslednjaVarijabla_error) error:m {: parser.report_error("Izvrsen oporavak do ; u liniji " + mleft, null); :} TACKA_ZAREZ
+                       ;
+
+/* skupovi */
+
+SetDecl ::= (SetDecl) SET ListaSkupova;
+
+ListaSkupova ::= (ListaSkupova_neposlednji) Skup ListaSkupova
+				 | 
+				 (ListaSkupova_poslednji) PoslednjiSkup
+				 ; 
+
+Skup ::= (Skup_ok) IDENT ZAREZ
+		 | 
+		 (Skup_error) error ZAREZ
+		 ;
+
+PoslednjiSkup ::= (PoslednjiSkup_ok) IDENT TACKA_ZAREZ
+				  |
+				  (PoslednjiSkup_error) error TACKA_ZAREZ
+				  ;
+
+/* metode */
+
+
+MetodeLista ::= (MetodeLista_imaMetoda) MetodeLista MethodDecl
+				|
+				(MetodeLista_nemaMetoda) /* epsilon */
+				;
+
+MethodDecl ::= (MethodDecl) MethodSignature LEVA_ZAGRADA FormParam DESNA_ZAGRADA ListaPromenljivihMetode LEVA_VITICASTA_ZAGRADA StatementList DESNA_VITICASTA_ZAGRADA; 
+				
+ListaPromenljivihMetode ::= (ListaPromenljivihMetode_varijabla) ListaPromenljivihMetode VarDecl
+							|
+							(ListaPromenljivihMetode_skup) ListaPromenljivihMetode SetDecl
+							|
+							(ListaPromenljivihMetode_prazna) /* epsilon */
+							;
+				
+
+MethodSignature ::= (MethodSignature) TipMetode IDENT;
+			
+TipMetode ::= (TipMetode_pravi) Type
+		      |
+		      (TipMetode_void) VOID
+		      ;
+
+FormParam ::= (FormParam_imaParametre) FormParamsList 
+			  |
+			  (FormParam_nemaParametre) /* epsilon */
+			  ;
+
+FormParamsList ::= (FormParamsList_viseParametara) FormParamDecl ZAREZ FormParamsList
+				   |
+				   (FormParamsList_jedanParametar) FormParamDecl
+				   |
+				   (FormParamsList_greska) error ZAREZ FormParamsList
+				   ;
+				 
+FormParamDecl ::= (FormParamDecl_nijeSet) Type IDENT UglasteZagrade
+				  |
+				  (FormParamDecl_Set) SET IDENT
+				  ;
+
+
+
+/* statements */
+
+
+PocetakIfBloka       ::= (PocetakIfBloka) 		/* epsilon */ ;
+PocetakDoWhileBloka  ::= (PocetakDoWhileBloka) 	/* epsilon */ ;
+PocetakIfUslova      ::= (PocetakIfUslova) 		/* epsilon */ ;
+KrajIfUslova         ::= (KrajIfUslova) 		/* epsilon */ ;
+PocetakDoWhileUslova ::= (PocetakDoWhileUslova) /* epsilon */ ;
+KrajDoWhileUslova    ::= (KrajDoWhileUslova)	/* epsilon */ ;
+PocetakElseBloka     ::= (PocetakElseBloka)     /* epsilon*/  ;
+
+StatementList ::= (StatementList_neprazna) StatementList Statement
+				  |
+				  (StatementList_prazna) /* epsilon*/
+				  ;	
+				  
+Statement ::= (Statement_single) SingleStatement
+              |
+              (Statement_block) LEVA_VITICASTA_ZAGRADA StatementList DESNA_VITICASTA_ZAGRADA
+              ;	
+
+SingleStatement ::= (Statement_designator) DesignatorStatement TACKA_ZAREZ
+				    |
+				    (Statement_if) IfUslov PocetakIfBloka Statement PocetakElseBloka
+				    |
+				    (Statement_ifElse) IfUslov PocetakIfBloka Statement PocetakElseBloka ELSE Statement
+				    |
+				    (Statement_doWhile) DO PocetakDoWhileBloka Statement WhileUslov
+				    |
+				    (Statement_break) BREAK TACKA_ZAREZ
+				    |
+				    (Statement_continue) CONTINUE TACKA_ZAREZ
+				    |
+				    (Statement_return) RETURN TACKA_ZAREZ
+				    |
+				    (Statement_returnExpr) RETURN Expr TACKA_ZAREZ
+				    |
+				    (Statement_print) PRINT LEVA_ZAGRADA Expr DESNA_ZAGRADA TACKA_ZAREZ
+				    |
+				    (Statement_printNumber) PRINT LEVA_ZAGRADA Expr ZAREZ NUMBER DESNA_ZAGRADA TACKA_ZAREZ
+				    |
+				    (Statement_read) READ LEVA_ZAGRADA Designator DESNA_ZAGRADA TACKA_ZAREZ
+				    ;
+
+WhileUslov ::= (WhileUslov_saCondition) WHILE LEVA_ZAGRADA PocetakDoWhileUslova Condition KrajDoWhileUslova BocniEfekat DESNA_ZAGRADA TACKA_ZAREZ
+			   |
+			   (WhileUslov_bezCondition) WHILE LEVA_ZAGRADA DESNA_ZAGRADA TACKA_ZAREZ;				
+	
+	
+BocniEfekat ::= (SaBocnimEfektom) ZAREZ DesignatorStatement
+				|
+				(BezBocnogEfekta) /* epsilon */
+				;	
+
+
+
+IfUslov ::= (IfUslov_ok) IF PocetakIfUslova LEVA_ZAGRADA Condition DESNA_ZAGRADA KrajIfUslova	
+			|
+			(IfUslov_error) IF PocetakIfUslova LEVA_ZAGRADA error:l {: parser.report_error("Izvrsen oporavak do ) u liniji " + lleft, null); :} DESNA_ZAGRADA KrajIfUslova
+			;	
+
+
+/* uslovi */
+
+Condition ::= (Condition_listaOrUslova) Condition KrajIliNaredbe ILI CondTerm
+			  |
+			  (Condition_jedanUslov) CondTerm
+			  ;
+
+KrajIliNaredbe ::= (KrajIliNaredbe) /* epsilon */;
+
+CondTerm ::= (CondTerm_listaAndUslova) CondTerm AND CondFact
+			 |
+			 (CondTerm_jedanUslov) CondFact
+			 ;
+
+CondFact ::= (CondFact_listaIzraza) Expr Relop Expr
+			 |
+			 (CondFact_jedanIzraz) Expr
+			 ;
+
+
+/* Designators */
+
+DesignatorStatement ::= (DesignatorStatement_expr) Designator JEDNAKO Expr 
+						|
+						(DesignatorStatement_pozivMetode) ImePozivaneMetode LEVA_ZAGRADA ActParsList DESNA_ZAGRADA
+						|
+						(DesignatorStatement_inkrement) Designator PLUS_PLUS
+						|
+						(DesignatorStatement_dekrement) Designator MINUS_MINUS
+						|
+						(DesignatorStatement_operacijaSaSkupovima) Designator JEDNAKO Designator Setop Designator
+						;
+
+ImePozivaneMetode ::= (ImePozivaneMetode) Designator;
+
+ActPars ::= (ActPars_listaIzraza) ActPars ZAREZ Expr
+			|
+			(ActPars_jedanIzraz) Expr
+			;
+			
+ActParsList ::= (ActParsList_neprazna) ActPars
+				|
+				(ActParsList_prazna) /* epsilon */
+				;
+
+Designator ::= (Designator_niz) ImeNizaDesignator LEVA_UGLASTA_ZAGRADA Expr DESNA_UGLASTA_ZAGRADA
+			   |
+			   (Designator_ident) IDENT
+			   ;
+
+ImeNizaDesignator ::= (ImeNizaDesignator) Designator;
+
+/* Expressions */
+
+
+Expr ::= (Expr_lista) AddopList
+		 |
+		 (Expr_map) Designator MAP Designator
+		 ;
+
+AddopList ::= (AddopList_listaTermova) AddopList Addop Term
+			  |
+			  (AddopList_jedanTerm) Term
+			  |
+			  (AddopList_minus) MINUS Term
+			  ;
+
+Term ::= (Term) FactorList;
+
+FactorList ::= (FactorList_listaFaktora) FactorList Mulop Factor
+		 	   |
+		 	   (FactorList_jedanFaktor) Factor
+		 	   ; 
+
+Factor ::= (Factor_pozivMetode) ImePozivaneMetode LEVA_ZAGRADA ActParsList DESNA_ZAGRADA
+		   |	
+		   (Factor_designator) Designator
+		   |
+		   (Factor_int) NUMBER
+		   |
+		   (Factor_char) CHAR_CONST
+		   |
+		   (Factor_bool) BOOL_CONST
+		   |
+		   (Factor_newSkup) NEW SET LEVA_UGLASTA_ZAGRADA Expr DESNA_UGLASTA_ZAGRADA
+		   |
+		   (Factor_newNiz) NEW Type LEVA_UGLASTA_ZAGRADA Expr DESNA_UGLASTA_ZAGRADA
+		   |
+		   (Factor_expr) LEVA_ZAGRADA Expr DESNA_ZAGRADA
+		   ;
+				
+
+/* Operacije */
+
+Relop ::= (Relop_jednakoJednako) JEDNAKO_JEDNAKO
+		  |
+		  (Relop_razlicito) RAZLICITO
+		  |
+		  (Relop_manje) MANJE
+		  |
+		  (Relop_vece) VECE
+		  |
+		  (Relop_manjeJednako) MANJE_JEDNAKO
+		  |
+		  (Relop_veceJednako) VECE_JEDNAKO
+		  ;
+
+Addop ::= (Addop_plus) PLUS
+		  |
+		  (Addop_minus) MINUS
+		  ;
+
+Mulop ::= (Mulop_puta) PUTA
+		  |
+		  (Mulop_podeljeno) PODELJENO
+		  |
+		  (Mulop_moduo) MODUO
+		  ;
+
+Setop ::= (Setop) UNION;			
+				
